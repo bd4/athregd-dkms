@@ -23,6 +23,10 @@
 #include "regd.h"
 #include "regd_common.h"
 
+char *user_country_name = "";
+module_param_named(cn, user_country_name, charp, S_IRUGO);
+MODULE_PARM_DESC(cn, "Country Name");
+
 static int __ath_regd_init(struct ath_regulatory *reg);
 
 /*
@@ -697,7 +701,12 @@ static int __ath_regd_init(struct ath_regulatory *reg)
 	}
 
 	regdmn = ath_regd_get_eepromRD(reg);
-	reg->country_code = ath_regd_get_default_country(regdmn);
+    reg->country_code = ath_regd_find_country_by_name(user_country_name);
+	if (reg->country_code != (u16) -1) {
+	    printk(KERN_DEBUG "ath: User Override Country Code\n");
+    } else {
+        reg->country_code = ath_regd_get_default_country(regdmn);
+    }
 
 	if (reg->country_code == CTRY_DEFAULT &&
 	    regdmn == CTRY_DEFAULT) {
