@@ -2,20 +2,17 @@
 
 Some wireless cards have the region set to 0x0 in firmware, and recent versions
 of the Linux kernel (since 5.8?) interpret this as the "global" region 0x64
-which is very restrictive and do not allow setting an alternate region. This
+which is very restrictive and does not allow setting an alternate region. This
 basically completely breaks functionality for 5Ghz bands. This affects the
 Compex Mini-PCI and Mini-PCIe cards often sold with pcengines ALIX and APU2
 boards, which make great wireless access points/routers.
 
 This repository contains DKMS directories for patched version of the drivers,
-which adds a `cn=COUNTRY_CODE` argument to the ath kernel module, and allows
-the region to be overridden at module load time.
+which uses the default country code (typically US) rather than world regulatory
+domain when the bad 0x0 region is set.
 
-Based on https://gist.github.com/BigNerd95/0be0a5b52a16524a78fc768f0d208a74
-
-The `dkms.conf` only rebuilds ath9k and ath10k, which are the drivers and
-hardware I know are affected by this issue. Others can be added, by figuring
-out which `.ko` modules are built and adding them to the `dkms.conf`.
+The `dkms.conf` only rebuilds the ath module; all dependent modules, most
+notably ath9k and ath10k, should work with the changes without being rebuilt.
 
 # Usage
 
@@ -24,9 +21,8 @@ out which `.ko` modules are built and adding them to the `dkms.conf`.
 As root (or with sudo):
 ```
 apt install dkms linux-headers
-cp -R athregd-5.10.56 /usr/src
-dkms install --no-depmod -m athregd -v 5.10.46 -k $(uname -r)
-echo "options ath cn=US" > /etc/modprobe.d/ath.conf
+cp -R athregd-5.10.0-8 /usr/src
+dkms install --no-depmod -m athregd -v 5.10.0-8 -k $(uname -r)
 ```
 
 Stop any connections or hostapd daemons running on the interface, then
@@ -35,7 +31,7 @@ and re-load the driver module. For example, for ath9k (as root):
 ```
 modprobe -r ath9k ath9k_hw ath ath9k_common
 depmod -a
-modinfo ath | grep cn # should show a parameter
+modinfo ath | grep filename # should show new dkms location
 modprobe ath9k
 ```
 
@@ -48,9 +44,8 @@ with the HWE kernel.
 As root (or with sudo):
 ```
 apt install dkms linux-image-generic-hwe-20.04 linux-headers-generic-hwe-20.04
-cp -R athregd-5.11.22 /usr/src
-dkms install --no-depmod -m athregd -v 5.11.22 -k $(uname -r)
-echo "options ath cn=US" > /etc/modprobe.d/ath.conf
+cp -R athregd-5.11.0-34 /usr/src
+dkms install --no-depmod -m athregd -v 5.11.0-34 -k $(uname -r)
 ```
 
 Stop any connections or hostapd daemons running on the interface, then
@@ -59,6 +54,6 @@ and re-load the driver module. For example, for ath10k (as root):
 ```
 modprobe -r ath10k ath10k_hw ath ath10k_common
 depmod -a
-modinfo ath | grep cn # should show a parameter
+modinfo ath | grep filename # should show new dkms location
 modprobe ath10k
 ```

@@ -1,0 +1,32 @@
+--- regd.c.orig	2021-09-13 13:08:20.124751873 -0500
++++ regd.c	2021-09-13 13:37:05.631666228 -0500
+@@ -116,6 +116,9 @@
+ 
+ static bool dynamic_country_user_possible(struct ath_regulatory *reg)
+ {
++	// always allow user setting
++	return true;
++
+ 	if (IS_ENABLED(CONFIG_ATH_REG_DYNAMIC_USER_CERT_TESTING))
+ 		return true;
+ 
+@@ -188,6 +191,9 @@
+ 
+ static bool ath_reg_dyn_country_user_allow(struct ath_regulatory *reg)
+ {
++	// always allow user setting
++	return true;
++
+ 	if (!IS_ENABLED(CONFIG_ATH_REG_DYNAMIC_USER_REG_HINTS))
+ 		return false;
+ 	if (!dynamic_country_user_possible(reg))
+@@ -677,7 +683,8 @@
+ 	if (reg->current_rd != COUNTRY_ERD_FLAG && reg->current_rd != 0)
+ 		return;
+ 	printk(KERN_DEBUG "ath: EEPROM regdomain sanitized\n");
+-	reg->current_rd = 0x64;
++	// Use default instead of 0x64 which breaks everything
++	reg->current_rd = CTRY_DEFAULT;
+ }
+ 
+ static int __ath_regd_init(struct ath_regulatory *reg)
